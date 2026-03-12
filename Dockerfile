@@ -1,18 +1,17 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Create data directory for CSV exports
+RUN mkdir -p /data/outbank_exports
 
-# Copy project files
-COPY pyproject.toml uv.lock ./
-COPY app.py ./
+# Install from PyPI
+RUN pip install --no-cache-dir mcp-outbank
 
-# Install dependencies using uv
-RUN uv sync --frozen
-
-# Default to 0.0.0.0 for HTTP transport (if used)
 ENV MCP_HOST=0.0.0.0
+ENV MCP_PORT=6668
+ENV MCP_TRANSPORT=http
 
-CMD ["uv", "run", "python", "app.py"]
+EXPOSE 6668
+
+CMD ["mcp-outbank"]

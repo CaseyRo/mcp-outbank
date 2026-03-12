@@ -1,17 +1,26 @@
 services:
-  finance-mcp:
-    build: .
-    container_name: finance-mcp
-    restart: unless-stopped
+  mcp-outbank:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-outbank
+    ports:
+      - "${MCP_PORT:-6668}:${MCP_PORT:-6668}"
     environment:
-      MCP_TRANSPORT: ${MCP_TRANSPORT:-stdio}
-      MCP_HOST: ${MCP_HOST:-0.0.0.0}
+      MCP_TRANSPORT: http
+      MCP_HOST: 0.0.0.0
       MCP_PORT: ${MCP_PORT:-6668}
       MCP_HTTP_AUTH_TOKEN: ${MCP_HTTP_AUTH_TOKEN:-}
       MCP_MIN_SCORE: ${MCP_MIN_SCORE:-0.55}
-      OUTBANK_CSV_DIR: ${OUTBANK_CSV_DIR:-/app/outbank_exports}
+      OUTBANK_CSV_DIR: /data/outbank_exports
       OUTBANK_CSV_GLOB: ${OUTBANK_CSV_GLOB:-*.csv}
-    ports:
-      - "${MCP_PORT:-6668}:${MCP_PORT:-6668}"
+      EXCLUDED_CATEGORIES: ${EXCLUDED_CATEGORIES:-Transfer}
     volumes:
-      - "${OUTBANK_CSV_DIR:-./outbank_exports}:/app/outbank_exports:ro"
+      - ${OUTBANK_CSV_HOST_DIR:-./outbank_exports}:/data/outbank_exports:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${MCP_PORT:-6668}/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
