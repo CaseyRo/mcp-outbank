@@ -5,8 +5,10 @@ WORKDIR /app
 # Create data directory for CSV exports
 RUN mkdir -p /data/outbank_exports
 
-# Install from PyPI
-RUN pip install --no-cache-dir mcp-outbank
+# Copy project files and install
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+RUN pip install --no-cache-dir .
 
 ENV MCP_HOST=0.0.0.0
 ENV MCP_PORT=6668
